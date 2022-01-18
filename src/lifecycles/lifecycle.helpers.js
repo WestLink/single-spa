@@ -22,10 +22,11 @@ export function flattenFnArray(appOrParcel, lifecycle) {
   const type = objectType(appOrParcel);
   const name = toName(appOrParcel);
 
+  // TODO 这是形成了一个Promise调用串联？
   return function (props) {
     return fns.reduce((resultPromise, fn, index) => {
       return resultPromise.then(() => {
-        const thisPromise = fn(props);
+        const thisPromise = fn(props); // 看来生命周期函数都是返回Promise的
         return smellsLikeAPromise(thisPromise)
           ? thisPromise
           : Promise.reject(

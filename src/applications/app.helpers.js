@@ -20,6 +20,7 @@ export function isActive(app) {
 
 export function shouldBeActive(app) {
   try {
+    // 询问这个应用在当前路径是否可用
     return app.activeWhen(window.location);
   } catch (err) {
     handleAppError(err, app, SKIP_BECAUSE_BROKEN);
@@ -32,6 +33,7 @@ export function toName(app) {
 }
 
 export function isParcel(appOrParcel) {
+  // 如果这个对象具备卸载包裹能力则认为是包裹对象
   return Boolean(appOrParcel.unmountThisParcel);
 }
 

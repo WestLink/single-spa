@@ -10,12 +10,15 @@ import { reasonableTime } from "../applications/timeouts.js";
 export function toUnmountPromise(appOrParcel, hardFail) {
   return Promise.resolve().then(() => {
     if (appOrParcel.status !== MOUNTED) {
+      // 没装载成功过，不管了
       return appOrParcel;
     }
+    // 设置当前状态为正在卸载中...
     appOrParcel.status = UNMOUNTING;
 
+    // 先卸载子包
     const unmountChildrenParcels = Object.keys(
-      appOrParcel.parcels
+      appOrParcel.parcels // 看来这里面存的都是子包的ID
     ).map((parcelId) => appOrParcel.parcels[parcelId].unmountThisParcel());
 
     let parcelError;
@@ -24,6 +27,7 @@ export function toUnmountPromise(appOrParcel, hardFail) {
       .then(unmountAppOrParcel, (parcelError) => {
         // There is a parcel unmount error
         return unmountAppOrParcel().then(() => {
+          // TODO 子包有失败的情况，也要卸载？
           // Unmounting the app/parcel succeeded, but unmounting its children parcels did not
           const parentError = Error(parcelError.message);
           if (hardFail) {

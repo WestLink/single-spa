@@ -6,8 +6,10 @@ export function handleAppError(err, app, newStatus) {
   const transformedErr = transformErr(err, app, newStatus);
 
   if (errorHandlers.length) {
+    // 如果有注册的错误处理函数则交由它们处理
     errorHandlers.forEach((handler) => handler(transformedErr));
   } else {
+    // 没有人处理，放到消息队列最后抛出这个异常
     setTimeout(() => {
       throw transformedErr;
     });
@@ -63,6 +65,7 @@ export function transformErr(ogErr, appOrParcel, newStatus) {
   let result;
 
   if (ogErr instanceof Error) {
+    // 如果是异常，则追加类型和名称信息
     try {
       ogErr.message = errPrefix + ogErr.message;
     } catch (err) {
@@ -72,6 +75,7 @@ export function transformErr(ogErr, appOrParcel, newStatus) {
     }
     result = ogErr;
   } else {
+    // 如果不是异常，则说明传递不出去，直接在控制台打印错误信息，然后构造出一个异常
     console.warn(
       formatErrorMessage(
         30,
@@ -91,6 +95,7 @@ export function transformErr(ogErr, appOrParcel, newStatus) {
     }
   }
 
+  // 在异常上加上所属者便于分别谁抛出的异常
   result.appOrParcelName = toName(appOrParcel);
 
   // We set the status after transforming the error so that the error message

@@ -114,6 +114,7 @@ export function reasonableTime(appOrParcel, lifecycle) {
     let finished = false;
     let errored = false;
 
+    // 触发生命周期函数
     appOrParcel[lifecycle](getProps(appOrParcel))
       .then((val) => {
         finished = true;
@@ -124,6 +125,7 @@ export function reasonableTime(appOrParcel, lifecycle) {
         reject(val);
       });
 
+    // 监测生命周期处理是否超时
     setTimeout(() => maybeTimingOut(1), warningPeriod);
     setTimeout(() => maybeTimingOut(true), timeoutConfig.millis);
 
@@ -139,21 +141,27 @@ export function reasonableTime(appOrParcel, lifecycle) {
       timeoutConfig.millis
     );
 
+    // 生命周期处理超时监测逻辑
     function maybeTimingOut(shouldError) {
       if (!finished) {
+        // 还没有完成，看看有没有错误
         if (shouldError === true) {
+          // 有错误
           errored = true;
           if (timeoutConfig.dieOnTimeout) {
+            // 如果配置为在超时后销毁则抛出异常
             reject(Error(errMsg));
           } else {
             console.error(errMsg);
             //don't resolve or reject, we're waiting this one out
           }
         } else if (!errored) {
-          const numWarnings = shouldError;
+          // 没有完成但也没有错误
+          const numWarnings = shouldError; // 这个参数之前是布尔，现在是数字，代表了警告次数
           const numMillis = numWarnings * warningPeriod;
           console.warn(errMsg);
           if (numMillis + warningPeriod < timeoutConfig.millis) {
+            // 还是没有超时再尝试一次
             setTimeout(() => maybeTimingOut(numWarnings + 1), warningPeriod);
           }
         }

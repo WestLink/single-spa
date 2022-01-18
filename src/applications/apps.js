@@ -40,12 +40,13 @@ export function getAppChanges() {
 
     switch (app.status) {
       case LOAD_ERROR:
+        // 这个应用在当前路径下应该加载展示，但是之前加载失败了，现在过了指定的时间，放到要加载的队列中
         if (appShouldBeActive && currentTime - app.loadErrorTime >= 200) {
           appsToLoad.push(app);
         }
         break;
       case NOT_LOADED:
-      case LOADING_SOURCE_CODE:
+      case LOADING_SOURCE_CODE: // TODO 代码还没下载完?
         if (appShouldBeActive) {
           appsToLoad.push(app);
         }
@@ -53,14 +54,16 @@ export function getAppChanges() {
       case NOT_BOOTSTRAPPED:
       case NOT_MOUNTED:
         if (!appShouldBeActive && getAppUnloadInfo(toName(app))) {
+          // 应用当前不可见并且已在卸载队列中，那就认为它是要被卸载的
           appsToUnload.push(app);
         } else if (appShouldBeActive) {
+          // 应用当前应可见，放到挂载队列中。TODO 这时候代码应该加载完了吧?
           appsToMount.push(app);
         }
         break;
       case MOUNTED:
         if (!appShouldBeActive) {
-          appsToUnmount.push(app);
+          appsToUnmount.push(app); // TODO unload和unmount有啥区别？
         }
         break;
       // all other statuses are ignored

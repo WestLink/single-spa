@@ -23,17 +23,21 @@ import { assign } from "../utils/assign.js";
 export function toLoadPromise(app) {
   return Promise.resolve().then(() => {
     if (app.loadPromise) {
+      // 已经在待加载队列了，返回promise供监听
       return app.loadPromise;
     }
 
     if (app.status !== NOT_LOADED && app.status !== LOAD_ERROR) {
+      // 已加载成功，直接返回应用实例
       return app;
     }
 
+    // 设置当前状态为加载源代码
     app.status = LOADING_SOURCE_CODE;
 
     let appOpts, isUserErr;
 
+    // TODO 这种直接返回已经resolved的promise的目的是什么？
     return (app.loadPromise = Promise.resolve()
       .then(() => {
         const loadPromise = app.loadApp(getProps(app));

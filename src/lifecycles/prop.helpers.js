@@ -6,6 +6,7 @@ import { formatErrorMessage } from "../applications/app-errors.js";
 
 export function getProps(appOrParcel) {
   const name = toName(appOrParcel);
+  // 解析自定义属性，要求必须是对象
   let customProps =
     typeof appOrParcel.customProps === "function"
       ? appOrParcel.customProps(name, window.location)
@@ -26,10 +27,11 @@ export function getProps(appOrParcel) {
       customProps
     );
   }
+  // 合成最终的属性
   const result = assign({}, customProps, {
     name,
     mountParcel: mountParcel.bind(appOrParcel),
-    singleSpa,
+    singleSpa, // 把整体能力也作为属性暴露出去了
   });
 
   if (isParcel(appOrParcel)) {

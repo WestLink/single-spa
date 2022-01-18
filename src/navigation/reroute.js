@@ -57,8 +57,9 @@ export function reroute(pendingPromises = [], eventArguments) {
     newUrl = (currentUrl = window.location.href);
 
   if (isStarted()) {
-    appChangeUnderway = true;
+    appChangeUnderway = true; // 打上全局的应用变化中的标记，多次调用的时候根据它来决定是否加入到等待队列里面去
     appsThatChanged = appsToUnload.concat(
+      // TODO unload的不算？
       appsToLoad,
       appsToUnmount,
       appsToMount

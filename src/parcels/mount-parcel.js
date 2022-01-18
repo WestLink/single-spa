@@ -30,6 +30,7 @@ export function mountParcel(config, customProps) {
 
   // Validate inputs
   if (!config || (typeof config !== "object" && typeof config !== "function")) {
+    // 不是所期望的配置形态
     throw Error(
       formatErrorMessage(
         2,
@@ -40,6 +41,7 @@ export function mountParcel(config, customProps) {
   }
 
   if (config.name && typeof config.name !== "string") {
+    // TODO 为啥必须要求是字符串？
     throw Error(
       formatErrorMessage(
         3,
@@ -51,6 +53,7 @@ export function mountParcel(config, customProps) {
   }
 
   if (typeof customProps !== "object") {
+    // 自定义属性到这里必须是对象，提供的时候可以是一个生成器
     throw Error(
       formatErrorMessage(
         4,
@@ -63,6 +66,7 @@ export function mountParcel(config, customProps) {
   }
 
   if (!customProps.domElement) {
+    // TODO 这里提供dom元素是干啥用的？
     throw Error(
       formatErrorMessage(
         5,
@@ -84,15 +88,18 @@ export function mountParcel(config, customProps) {
   const parcel = {
     id,
     parcels: {},
-    status: passedConfigLoadingFunction
+    status: passedConfigLoadingFunction // 如果配置对象是个函数，则状态设置为正在加载代码，否则设置为未启动
       ? LOADING_SOURCE_CODE
       : NOT_BOOTSTRAPPED,
     customProps,
-    parentName: toName(owningAppOrParcel),
+    parentName: toName(owningAppOrParcel), // 上层包的名称，TODO 难道支持应用形成树状的结构？
     unmountThisParcel() {
+      // 提供卸载的能力
       return mountPromise
         .then(() => {
+          // 说明已经尝试装载过
           if (parcel.status !== MOUNTED) {
+            // 但是没成功
             throw Error(
               formatErrorMessage(
                 6,
@@ -107,16 +114,18 @@ export function mountParcel(config, customProps) {
         })
         .then((value) => {
           if (parcel.parentName) {
+            // 卸载成功后从子包中删除
             delete owningAppOrParcel.parcels[parcel.id];
           }
 
           return value;
         })
         .then((value) => {
-          resolveUnmount(value);
+          resolveUnmount(value); // 通知卸载消息的订阅者
           return value;
         })
         .catch((err) => {
+          // TODO 这个catch的是谁？
           parcel.status = SKIP_BECAUSE_BROKEN;
           rejectUnmount(err);
           throw err;
@@ -212,6 +221,7 @@ export function mountParcel(config, customProps) {
 
     if (config.update) {
       parcel.update = flattenFnArray(config, "update");
+      // 更新的生命周期函数转换为无需返回Promised的
       externalRepresentation.update = function (customProps) {
         parcel.customProps = customProps;
 
