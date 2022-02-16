@@ -80,7 +80,7 @@ export function reroute(pendingPromises = [], eventArguments) {
 
       return (
         Promise.all(loadPromises)
-          .then(callAllEventListeners)
+          .then(callAllEventListeners) // 触发当前的和所有等待的浏览器路由事件监听函数
           // there are no mounted apps, before start() is called, so we always return []
           .then(() => [])
           .catch((err) => {
@@ -94,6 +94,7 @@ export function reroute(pendingPromises = [], eventArguments) {
   function performAppChanges() {
     return Promise.resolve().then(() => {
       // https://github.com/single-spa/single-spa/issues/545
+      // 发布全局的应用变化前自定义事件
       window.dispatchEvent(
         new CustomEvent(
           appsThatChanged.length === 0
@@ -103,6 +104,7 @@ export function reroute(pendingPromises = [], eventArguments) {
         )
       );
 
+      // 发布全局的路由变化前事件，把取消路由作为能力给监听者取消
       window.dispatchEvent(
         new CustomEvent(
           "single-spa:before-routing-event",
@@ -111,6 +113,8 @@ export function reroute(pendingPromises = [], eventArguments) {
       );
 
       if (navigationIsCanceled) {
+        // 如果路由过程被取消
+        // 发布路由挂载前事件
         window.dispatchEvent(
           new CustomEvent(
             "single-spa:before-mount-routing-event",
@@ -182,6 +186,7 @@ export function reroute(pendingPromises = [], eventArguments) {
   }
 
   function finishUpAndReturn() {
+    // 保证队列中的任务完成（从这里看，应该是卸载任务）
     const returnValue = getMountedApps();
     pendingPromises.forEach((promise) => promise.resolve(returnValue));
 
@@ -193,6 +198,7 @@ export function reroute(pendingPromises = [], eventArguments) {
       window.dispatchEvent(
         new CustomEvent(appChangeEventName, getCustomEventDetail())
       );
+      // TODO 这里为啥要发送路由变化事件
       window.dispatchEvent(
         new CustomEvent("single-spa:routing-event", getCustomEventDetail())
       );
@@ -202,6 +208,7 @@ export function reroute(pendingPromises = [], eventArguments) {
        * single-spa's.
        */
       setTimeout(() => {
+        //  拦截异常后放到事件队尾保障框架本身的任务能顺利完成不被中断
         throw err;
       });
     }
@@ -214,6 +221,7 @@ export function reroute(pendingPromises = [], eventArguments) {
     appChangeUnderway = false;
 
     if (peopleWaitingOnAppChange.length > 0) {
+      // 过程中有等待的
       /* While we were rerouting, someone else triggered another reroute that got queued.
        * So we need reroute again.
        */
@@ -274,7 +282,7 @@ export function reroute(pendingPromises = [], eventArguments) {
         appsByNewStatus,
         totalAppChanges: appsThatChanged.length,
         originalEvent: eventArguments?.[0],
-        oldUrl,
+        oldUrl, // 这两个是全局的路由变化记录
         newUrl,
         navigationIsCanceled,
       },

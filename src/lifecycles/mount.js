@@ -18,6 +18,7 @@ export function toMountPromise(appOrParcel, hardFail) {
     }
 
     if (!beforeFirstMountFired) {
+      // 发布全局首次装载前事件
       window.dispatchEvent(new CustomEvent("single-spa:before-first-mount"));
       beforeFirstMountFired = true;
     }
@@ -27,6 +28,7 @@ export function toMountPromise(appOrParcel, hardFail) {
         appOrParcel.status = MOUNTED;
 
         if (!firstMountFired) {
+          // 发布全局首次装载事件
           window.dispatchEvent(new CustomEvent("single-spa:first-mount"));
           firstMountFired = true;
         }
@@ -38,6 +40,7 @@ export function toMountPromise(appOrParcel, hardFail) {
         // We temporarily put the appOrParcel into MOUNTED status so that toUnmountPromise actually attempts to unmount it
         // instead of just doing a no-op.
         appOrParcel.status = MOUNTED;
+        // 装载失败后就卸载它
         return toUnmountPromise(appOrParcel, true).then(
           setSkipBecauseBroken,
           setSkipBecauseBroken

@@ -232,6 +232,7 @@ export function mountParcel(config, customProps) {
 
   // Start bootstrapping and mounting
   // The .then() causes the work to be put on the event loop instead of happening immediately
+  // 通过下面的then方式，保证按照次序执行
   const bootstrapPromise = loadPromise.then(() =>
     toBootstrapPromise(parcel, true)
   );

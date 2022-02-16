@@ -16,6 +16,7 @@ export function toBootstrapPromise(appOrParcel, hardFail) {
     appOrParcel.status = BOOTSTRAPPING;
 
     if (!appOrParcel.bootstrap) {
+      // 如果没有实现启动事件，那么采用默认的实现，简单的把状态设置一下
       // Default implementation of bootstrap
       return Promise.resolve().then(successfulBootstrap);
     }
